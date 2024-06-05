@@ -4,20 +4,22 @@ from tkinter import messagebox
 import sqlite3
 import os
 
-
+#connect database
 connection = sqlite3.connect("database.db")
 cursor = connection.cursor()
 
+#create database
 cursor.execute('''
         CREATE TABLE IF NOT EXISTS Items (
                Item_no INT NOT NULL,
                Item_name TEXT NOT NULL,
-               Price INT
+               Price REAL
         )
 ''')
 
 connection.commit()
 
+#insert data to db
 def insert_items(item_number,item,price):
     cursor.execute("INSERT INTO Items (Item_no,Item_name, Price) VALUES (?, ?, ?)", (item_number,item, price))
     connection.commit()
@@ -27,29 +29,31 @@ def close_connection():
     cursor.close()
     connection.close()
 
+#search data from db
 def search(searchh):
         cursor.execute("SELECT * FROM Items WHERE Item_name LIKE ? OR Item_name LIKE ? or Item_no LIKE ?",
                       ('%' + searchh + '%', 'le%' + searchh + '%',searchh))
         result = cursor.fetchall()
         return result
 
-     
+#update data   
 def save_changes(old_itemno,updated_item,updated_price,new_itemno):
       cursor.execute("UPDATE Items SET Item_no=?,Item_name=?,Price=? WHERE Item_no=?",
                      (old_itemno,updated_item,updated_price,new_itemno))
       connection.commit()
 
+#delete data
 def delete_record(delete_item):
     cursor.execute("DELETE FROM Items WHERE Item_no=?",(delete_item,))
     connection.commit()
 
 window =Tk()
 #-----------------------------------------------------------------------------create the window
-window.configure(bg="#E1F0DA")
+window.configure(bg="#E1F0DA")#bg color
 screen_width=window.winfo_screenwidth()
 screen_height=window.winfo_screenheight()
-window.geometry("1100x600")
-window.title("Python Project")
+window.geometry("1100x600") #-------------------------size of the window
+window.title("Python Project") #-------------------------title of the window
 
 #-----------------------------------------------------------------------------------------------------------
 def refresh():
@@ -69,14 +73,15 @@ def refresh():
     price_entry.delete(0,END)
     item_entry.delete(0,END)
     search_entry.delete(0,END)
-    
+
+#search box   
 def search_items():
     searchh=search_entry.get()
     results=search(searchh)
     result_box.delete(0,END)
     if results:
       for row in results:
-        items_text = f"{row[0]}  -   {row[1]}  -  {row[2]}" 
+        items_text = f"{row[0]}  -   {row[1]}  -  {row[2]:.2f}" 
         result_box.insert(END,items_text)
     else:
       result_box.insert(END," No matching items found....")
@@ -109,12 +114,13 @@ def update_item_no_label(item_number):
 next_item_no = last_no()+1
 update_item_no_label(next_item_no)
 
+#get inputs from GUI
 def add_items():
     try:
         item_number=count()
         item=item_entry.get()
         price=price_entry.get()
-        price=int(price)
+        price=float(price)
         insert_items(item_number,item,price)
         price_entry.delete(0,END)
         item_entry.delete(0,END)
@@ -124,6 +130,7 @@ def add_items():
         messagebox.showerror(title="Error",
                             message="Error occurd Try again!")    
 
+#get selected item to the box
 def print_selected(event):
         update_box_item.delete(0, END)
         update_box_price.delete(0, END)
@@ -133,9 +140,9 @@ def print_selected(event):
             selected_item=result_box.get(i)
             selected_item=selected_item.split("  -  ",)
             update_box_item.insert(END,selected_item[1])
-            update_box_price.insert(END,selected_item[2])
+            update_box_price.insert(END,f"{float(selected_item[2]):.2f}")
 
-
+#save changes
 def save():
     try:
         old_itemno=selected_item[0]
@@ -145,7 +152,7 @@ def save():
 
         updated_item=update_box_item.get()
         updated_price=update_box_price.get()
-        updated_price=int(updated_price)
+        updated_price=float(updated_price)
 
             
         save_changes(old_itemno,updated_item,updated_price,new_itemno)
@@ -157,7 +164,7 @@ def save():
         messagebox.showerror(title="Error",
                             message="Error occurd Try again!") 
 
-
+#delete selected data row
 def delete():
         try:
             delete_item=selected_item[0]
@@ -168,7 +175,7 @@ def delete():
         except:
             messagebox.showerror(title="Error",
                             message="Error occurd Try again!") 
-
+#--------------------------------------------------GUI-------------------------------------------------------------------
 #----------------------------------------------------------------------------create the label
 start_label=Label(window,
                   text="-Welcome to Python Project-",
